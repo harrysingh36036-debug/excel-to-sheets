@@ -1,16 +1,32 @@
 import os
 import sys
 import json
+import glob
 import openpyxl
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
-EXCEL_FILE = os.environ.get("EXCEL_FILE", "")
+excel_files = (
+    glob.glob("**/*.xlsx", recursive=True)
+    + glob.glob("**/*.xls", recursive=True)
+)
+excel_files = [f for f in excel_files if not f.startswith(".git/")]
+
+if not excel_files:
+    print("ERROR: No Excel file (.xlsx or .xls) found in the repository.")
+    print("Upload a .xlsx or .xls file to trigger the sync.")
+    sys.exit(1)
+
+EXCEL_FILE = excel_files[0]
 GOOGLE_SHEET_ID = os.environ.get("GOOGLE_SHEET_ID", "")
 SERVICE_ACCOUNT_JSON = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON", "")
 
-if not EXCEL_FILE:
-    print("ERROR: No Excel file found in the commit. Please upload a .xlsx or .xls file.")
+if not GOOGLE_SHEET_ID:
+    print("ERROR: GOOGLE_SHEET_ID secret is not set.")
+    sys.exit(1)
+
+if not SERVICE_ACCOUNT_JSON:
+    print("ERROR: GOOGLE_SERVICE_ACCOUNT_JSON secret is not set.")
     sys.exit(1)
 
 if not GOOGLE_SHEET_ID:
